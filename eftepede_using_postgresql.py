@@ -45,7 +45,7 @@ class PostgresqlDatabase(object):
         try:
             c = self.db.cursor()
             try:
-                result = c.execute(stmt, params)            
+                result = c.execute(stmt, params)
                 result = c.execute("COMMIT")
             finally:
                 c.close()

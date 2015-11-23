@@ -5,6 +5,8 @@ import base64
 import Crypto.Cipher.AES 
 
 def encode(password):
+    if isinstance(password, unicode):
+        password = password.encode("latin-1")
     assert isinstance(password, str)
     
     data = "h987://p-n@nd-q."

@@ -5,13 +5,13 @@ import threading
 import logging
 import logging.handlers
 import eftepede_globals
-import pyftpdlib.ftpserver
+import pyftpdlib.authorizers
 import eftepede_password
 
-class Authorizer(pyftpdlib.ftpserver.DummyAuthorizer):
+class Authorizer(pyftpdlib.authorizers.DummyAuthorizer):
 
     def __init__(self, config, logger):   
-        pyftpdlib.ftpserver.DummyAuthorizer.__init__(self)
+        pyftpdlib.authorizers.DummyAuthorizer.__init__(self)
         self.config = config
         self.logger = logger
         self.db = eftepede_globals.Database
@@ -19,9 +19,9 @@ class Authorizer(pyftpdlib.ftpserver.DummyAuthorizer):
 
     def add_user(self, username, password, homedir, perm='elr', msg_login="Login successful.", msg_quit="Goodbye."):        
         if self.db.has_user(username):
-            raise pyftpdlib.ftpserver.AuthorizerError('User "%s" already exists' %username)
+            raise pyftpdlib.authorizers.AuthorizerError('User "%s" already exists' % (username, ))
         if not os.path.isdir(homedir):
-            raise pyftpdlib.ftpserver.AuthorizerError('No such directory: "%s"' %homedir)
+            raise pyftpdlib.authorizers.AuthorizerError('No such directory: "%s"' % (homedir, ))
         homedir = os.path.realpath(homedir)
         self._check_permissions(username, perm)
         self.db.add_user(username, eftepede_password.encode(password), homedir, perm, msg_login, msg_quit)
@@ -36,8 +36,8 @@ class Authorizer(pyftpdlib.ftpserver.DummyAuthorizer):
         except KeyError:
             pass
 
-    def validate_authentication(self, username, given_password):
-        self.logger.info("validate_authentication(%r, %r) called" % (username, given_password, ))
+    def validate_authentication(self, username, given_password, handler):
+        self.logger.info("validate_authentication(%r, %r, %r) called" % (username, given_password, handler, ))
         # NB: this may be tricky, for the sake of unicode names returned from the database...
         result = self.db.identify(username)
         if result is None:
@@ -50,8 +50,12 @@ class Authorizer(pyftpdlib.ftpserver.DummyAuthorizer):
             self.logger.warn("Warning, validate_authentication(%r) failed: invalid password" % (username, ))
             return False
 
-        dic = {'home': str(homedir),
-               'perm': str(perm),
+
+        if isinstance(homedir, str):
+            homedir = homedir.decode("latin-1")
+
+        dic = {'home': homedir,
+               'perm': "elradfmwM",
                'operms': {},
                'msg_login': str(msg_login),
                'msg_quit': str(msg_quit)

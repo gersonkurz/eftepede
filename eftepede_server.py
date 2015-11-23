@@ -9,7 +9,8 @@ import logging.handlers
 import eftepede_globals
 import re
 import socket
-import pyftpdlib.ftpserver
+import pyftpdlib.servers
+import pyftpdlib.handlers
 import eftepede_authorizer
 try:
     import _winreg
@@ -88,9 +89,9 @@ class eftepede_server(object):
         
         self.authorizer = eftepede_authorizer.Authorizer(self.config, self.logger)
         
-        pyftpdlib.ftpserver.log = self.logger.info
-        pyftpdlib.ftpserver.logline = self.logger.info
-        pyftpdlib.ftpserver.logerror = self.logger.error
+        pyftpdlib.servers.log = self.logger.info
+        pyftpdlib.servers.logline = self.logger.info
+        pyftpdlib.servers.logerror = self.logger.error
                
         if self.config.anonymous_enabled:        
             self.authorizer.add_anonymous(self.config.anonymous_homedir)
@@ -116,11 +117,11 @@ class eftepede_server(object):
 
     def run(self): 
         # Instantiate FTP handler class
-        self.ftp_handler = pyftpdlib.ftpserver.FTPHandler
+        self.ftp_handler = pyftpdlib.handlers.FTPHandler
         self.ftp_handler.authorizer = self.authorizer
 
         # Define a customized banner (string returned when client connects)
-        self.ftp_handler.banner = "eftepede %s ready, thanks to Python, pyftpdlib, sqlite and a host of others..." % (pyftpdlib.ftpserver.__ver__, )                
+        self.ftp_handler.banner = "eftepede %s ready, thanks to Python, pyftpdlib, sqlite and a host of others..." % (pyftpdlib.__ver__, )                
 
         # Specify a masquerade address and the range of ports to use for
         # passive connections.  Decomment in case you're behind a NAT.
@@ -132,7 +133,7 @@ class eftepede_server(object):
 
         # Instantiate FTP server class and listen to 0.0.0.0:21
         address = (self.config.ftp_address, self.config.ftp_portnum)
-        self.ftpd = pyftpdlib.ftpserver.FTPServer(address, self.ftp_handler)
+        self.ftpd = pyftpdlib.servers.FTPServer(address, self.ftp_handler)
 
         # set a limit for connections
         self.ftpd.max_cons = self.config.max_cons
