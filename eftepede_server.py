@@ -29,12 +29,14 @@ class eftepede_server(object):
         # read configuration file 
         self.config_file = ConfigParser.SafeConfigParser()
         self.config_file.read(os.path.join(os.getcwd(), "eftepede_config.ini"))
-        self.logger = logging.getLogger('eftepede')
-        self.logger.setLevel(logging.CRITICAL)
+        self.logger = logging.getLogger('pyftpdlib')
+        self.logger.setLevel(logging.ERROR)
+        logging.basicConfig(level = logging.ERROR)
             
         if self.get_setting("Enabled", True, bool, "Trace"):
             
             LOG_FILENAME = self.get_setting("Filename", os.path.join(os.getcwd(), "eftepede.log"), None, "Trace")
+	    logging.basicConfig(filename=os.path.join(os.getcwd(), "pyftpdlib.log"), level=logging.DEBUG)
 
             # Set up a specific logger with our desired output level
             self.logger.setLevel(logging.DEBUG)
@@ -50,6 +52,7 @@ class eftepede_server(object):
             self.logger.addHandler(handler)   
             
         self.logger.info("_" * 90);
+        self.logger.debug("just to see if debug comes on")
             
         self.config = config()
         self.config.database_provider = self.get_setting("database_provider", "")
@@ -89,9 +92,9 @@ class eftepede_server(object):
         
         self.authorizer = eftepede_authorizer.Authorizer(self.config, self.logger)
         
-        pyftpdlib.servers.log = self.logger.info
-        pyftpdlib.servers.logline = self.logger.info
-        pyftpdlib.servers.logerror = self.logger.error
+        #pyftpdlib.servers.log = self.logger.info
+        #pyftpdlib.servers.logline = self.logger.info
+        #pyftpdlib.servers.logerror = self.logger.error
                
         if self.config.anonymous_enabled:        
             self.authorizer.add_anonymous(self.config.anonymous_homedir)
